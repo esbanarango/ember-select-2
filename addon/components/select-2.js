@@ -113,22 +113,26 @@ var Select2Component = Ember.Component.extend({
         return;
       }
 
-      var output,
-          id = get(item, optionIdPath),
-          text = get(item, optionLabelPath),
-          headline = get(item, optionHeadlinePath),
-          description = get(item, optionDescriptionPath);
-
-      if (item.children) {
-        output = Ember.Handlebars.Utils.escapeExpression(headline);
+      var output;
+      if($.isFunction(self.formatResult)) {
+        output = self.formatResult(item);
       } else {
-        output = Ember.Handlebars.Utils.escapeExpression(text);
-      }
+        var id = get(item, optionIdPath),
+            text = get(item, optionLabelPath),
+            headline = get(item, optionHeadlinePath),
+            description = get(item, optionDescriptionPath);
 
-      // only for "real items" (no group headers) that have a description
-      if (id && description) {
-        output += " <span class=\"text-muted\">" +
-          Ember.Handlebars.Utils.escapeExpression(description) + "</span>";
+        if (item.children) {
+          output = Ember.Handlebars.Utils.escapeExpression(headline);
+        } else {
+          output = Ember.Handlebars.Utils.escapeExpression(text);
+        }
+
+        // only for "real items" (no group headers) that have a description
+        if (id && description) {
+          output += " <span class=\"text-muted\">" +
+            Ember.Handlebars.Utils.escapeExpression(description) + "</span>";
+        }
       }
 
       return output;
@@ -144,12 +148,16 @@ var Select2Component = Ember.Component.extend({
         return;
       }
 
-      // if set, use the optionLabelSelectedPath for formatting selected items,
-      // otherwise use the usual optionLabelPath
-      var text = get(item, optionLabelSelectedPath || optionLabelPath);
+      if($.isFunction(self.formatSelection)) {
+        return self.formatSelection(item);
+      } else {
+        // if set, use the optionLabelSelectedPath for formatting selected items,
+        // otherwise use the usual optionLabelPath
+        var text = get(item, optionLabelSelectedPath || optionLabelPath);
 
-      // escape text unless it's passed as a Handlebars.SafeString
-      return Ember.Handlebars.Utils.escapeExpression(text);
+        // escape text unless it's passed as a Handlebars.SafeString
+        return Ember.Handlebars.Utils.escapeExpression(text);
+      }
     };
 
     /*
@@ -290,7 +298,7 @@ var Select2Component = Ember.Component.extend({
       // this method should not be needed without the optionValuePath option
       // but make sure there is an appropriate error just in case.
       Ember.assert("select2#initSelection has been called without an \"" +
-        "optionValuePath\" set.", optionValuePath !== null && optionValuePath !== undefined);
+        "optionValuePath\" set.", optionValuePath);
 
       Ember.assert("select2#initSelection can not map string values to full objects " +
         "in typeahead mode. Please open a github issue if you have questions to this.",
@@ -333,7 +341,7 @@ var Select2Component = Ember.Component.extend({
               break;
             }
           }
-        } else {
+        } else {
           // ...or flat data structure: try to match simple item
           matchIndex = values.indexOf("" + get(item, optionValuePath));
           if (matchIndex !== -1) {
