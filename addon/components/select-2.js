@@ -53,6 +53,7 @@ var Select2Component = Ember.Component.extend({
   valueSeparator: ',',
 
   // internal state
+  _select2Object: null,
   _hasSelectedMissingItems: false,
   _hasPendingContentPromise: Ember.computed.alias('content.isPending'),
   _hasFailedContentPromise: Ember.computed.alias('content.isRejected'),
@@ -388,6 +389,7 @@ var Select2Component = Ember.Component.extend({
     };
 
     this._select = this.$().select2(options);
+    this.set('_select2Object',this._select);
 
     this._select.on("change", run.bind(this, function() {
       // grab currently selected data from select plugin
@@ -425,6 +427,7 @@ var Select2Component = Ember.Component.extend({
   willDestroyElement: function() {
     // If an assertion caused the component not to render, we can't remove it from the dom.
     if(this._select) {
+      this.set('_select2Object',null);
       this._select.off("change");
       this._select.select2("destroy");
     }
